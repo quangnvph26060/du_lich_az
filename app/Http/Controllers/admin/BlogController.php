@@ -57,16 +57,23 @@ class BlogController extends Controller
             'catalogue_id' => 'required|integer|exists:catalogues,id',
             'image' => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:2048',
             'short_description' => 'nullable|string|max:500',
-            'seo_title' => 'nullable|string|max:255',
-            'seo_description' => 'nullable|string|max:255',
-            'tags' => 'nullable',
-            'tags.*' => 'string',
-            'keywords' => 'nullable',
-            'keywords.*' => 'string',
+
+            // SEO Fields
+            'seo_title' => 'nullable|string|max:60', // Tối ưu: 50-60 ký tự
+            'seo_description' => 'nullable|string|max:160', // Tối ưu: 120-160 ký tự
+
+            // Optional SEO fields
+            'tags' => 'nullable|array',
+            'tags.*' => 'string|max:30',
+
+            'keywords' => 'nullable|array',
+            'keywords.*' => 'string|max:30',
+
             'status' => 'nullable|boolean',
-            'posted_at' => 'nullable',
-            'remove_at' => 'nullable',
+            'posted_at' => 'nullable|date',
+            'remove_at' => 'nullable|date',
         ]);
+
 
 
         if (!empty($request->tags)) {
@@ -258,7 +265,7 @@ class BlogController extends Controller
     public function updateSeo(Request $request, $id)
     {
         $blog = Blog::findOrFail($id);
-        
+
         $request->validate([
             'seo_title' => 'nullable|string|max:255',
             'seo_description' => 'nullable|string|max:255',
@@ -272,13 +279,13 @@ class BlogController extends Controller
         ]);
 
         if ($request->has('keywords')) {
-            $keywords = collect($request->keywords)->map(function($keyword) {
+            $keywords = collect($request->keywords)->map(function ($keyword) {
                 return Keyword::updateOrCreate(
                     ['name' => $keyword],
                     ['slug' => Str::slug($keyword)]
                 )->id;
             });
-            
+
             $blog->keywords()->sync($keywords);
         }
 
@@ -291,7 +298,7 @@ class BlogController extends Controller
     public function getSeoAnalysis(Request $request, $id)
     {
         $blog = Blog::findOrFail($id);
-        
+
         return response()->json([
             'seo_score' => $blog->seo_score,
             'seo_suggestions' => $blog->seo_suggestions,

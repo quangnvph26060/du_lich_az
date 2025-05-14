@@ -88,6 +88,21 @@
                         </div>
                     </div>
 
+                    {{-- Điểm SEO --}}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="mb-0">Điểm SEO tổng thể</h5>
+                                <span class="badge bg-success fs-6" id="seo-score-badge">85/100</span>
+                            </div>
+                            <div class="progress mb-3" style="height: 10px;">
+                                <div class="progress-bar bg-success" id="seo-score-progress" role="progressbar"
+                                    style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- SEO Card -->
                     <div class="card mb-3" id="seo-card">
                         <div class="card-body">

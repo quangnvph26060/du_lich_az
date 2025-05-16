@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\RankmathSEOForLaravel\Services;
 
 use Illuminate\Support\Str;
 
@@ -31,8 +31,11 @@ class SeoService
      */
     public function generateSlug(string $title): string
     {
-        return Str::slug($title);
+        // Thay thế tiếng Việt có dấu thành không dấu
+        $slug = Str::slug($title, '-');
+        return $slug;
     }
+
 
     /**
      * Tạo keywords từ nội dung
@@ -86,18 +89,19 @@ class SeoService
      */
     public function checkKeywordDensity(string $content, string $keyword): array
     {
-        $content = mb_strtolower($content);
-        $keyword = mb_strtolower($keyword);
-        
-        $totalWords = str_word_count(strip_tags($content));
-        $keywordCount = substr_count($content, $keyword);
-        
-        $density = ($keywordCount / $totalWords) * 100;
-        
+        $contentLower = mb_strtolower($content);
+        $keywordLower = mb_strtolower($keyword);
+
+        $totalWords = preg_match_all('/\p{L}+/u', strip_tags($content), $matches);
+        $keywordCount = substr_count($contentLower, $keywordLower);
+
+        $density = $totalWords > 0 ? ($keywordCount / $totalWords) * 100 : 0;
+
         return [
             'density' => round($density, 2),
             'is_optimal' => $density >= 0.5 && $density <= 2.5,
             'message' => $density < 0.5 ? 'Mật độ từ khóa quá thấp' : ($density > 2.5 ? 'Mật độ từ khóa quá cao' : 'Mật độ từ khóa tối ưu')
         ];
     }
-} 
+
+}

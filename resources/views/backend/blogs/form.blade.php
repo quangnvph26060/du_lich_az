@@ -3,14 +3,26 @@
 @php
     use App\Models\Tag;
     use App\Models\Keyword;
+
 @endphp
 
 @section('title', isset($blog) ? 'Sửa bài viết' : 'Thêm mới bài viết')
 @section('content')
+
+@if ($errors->any())
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
     <div class="container-fluid">
         <a href="{{ route('admin.blogs.index') }}" class="btn btn-link mb-3" style="font-size:1.1rem;font-weight:500;">
             <i class="fa fa-arrow-left me-1"></i> Quay lại danh sách
         </a>
+
         <form action="{{ isset($blog) && $blog->id ? route('admin.blogs.update', $blog->id) : route('admin.blogs.store') }}"
             method="POST" enctype="multipart/form-data">
             @csrf
@@ -89,19 +101,41 @@
                     </div>
 
                     {{-- Điểm SEO --}}
+                    @php
+
+                        $seoScoreValue = $seoData['seoScoreValue'] ?? 0;
+                        $analysis = $seoData['analysis'] ?? [];
+                        $hasWarning = $seoData['hasWarning'] ?? false;
+
+                        $seoColor = 'bg-danger'; // đỏ mặc định (dưới 50)
+                        $badgeClass = 'bg-danger';
+
+                        if ($seoScoreValue >= 80) {
+                            $seoColor = 'bg-success'; // xanh lá (tốt)
+                            $badgeClass = 'bg-success';
+                        } elseif ($seoScoreValue >= 50) {
+                            $seoColor = 'bg-warning'; // vàng (trung bình)
+                            $badgeClass = 'bg-warning text-dark';
+                        }
+                    @endphp
+
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <h5 class="mb-0">Điểm SEO tổng thể</h5>
-                                <span class="badge bg-success fs-6" id="seo-score-badge">85/100</span>
+                                <span class="badge {{ $badgeClass }} fs-6" id="seo-score-badge">
+                                    {{ $seoScoreValue }}/100
+                                </span>
                             </div>
                             <div class="progress mb-3" style="height: 10px;">
-                                <div class="progress-bar bg-success" id="seo-score-progress" role="progressbar"
-                                    style="width: 85%;" aria-valuenow="85" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar {{ $seoColor }}" id="seo-score-progress" role="progressbar"
+                                    style="width: {{ $seoScoreValue }}%;" aria-valuenow="{{ $seoScoreValue }}"
+                                    aria-valuemin="0" aria-valuemax="100">
                                 </div>
                             </div>
                         </div>
                     </div>
+
 
                     <!-- SEO Card -->
                     <div class="card mb-3" id="seo-card">
@@ -119,21 +153,27 @@
                                 <hr>
                                 <!-- Phần hiển thị điểm SEO -->
                                 <div class="mb-3">
-                                    <h5 class="mb-0">SEO cơ bản <span class="badge bg-success ms-2">Tất cả điều tốt</span>
+                                    <h5 class="mb-0">SEO cơ bản
+                                        <span
+                                            class="badge {{ isset($hasWarning) && $hasWarning ? 'bg-warning' : 'bg-success' }} ms-2">
+                                            {{ isset($hasWarning) && $hasWarning ? 'Cần cải thiện' : 'Tất cả điều tốt' }}
+                                        </span>
                                     </h5>
                                     <ul class="list-unstyled mb-0 mt-2">
-                                        <li><i class="fa fa-check-circle text-success"></i> Tuyệt vời! Bạn đang sử dụng từ
-                                            khoá chính trong Tiêu đề SEO.</li>
-                                        <li><i class="fa fa-check-circle text-success"></i> Đã sử dụng từ khoá chính trong
-                                            Mô tả Meta SEO.</li>
-                                        <li><i class="fa fa-check-circle text-success"></i> Từ khoá chính đã được sử dụng
-                                            trong URL.</li>
-                                        <li><i class="fa fa-check-circle text-success"></i> Từ khoá chính xuất hiện trong
-                                            10% nội dung đầu tiên.</li>
-                                        <li><i class="fa fa-check-circle text-success"></i> Đã tìm thấy từ khoá chính trong
-                                            nội dung.</li>
-                                        <li><i class="fa fa-exclamation-circle text-warning"></i> Nội dung dài 1022 từ. Làm
-                                            tốt lắm!</li>
+                                        @if (isset($seoData['analysis']) && count($seoData['analysis']))
+                                            @foreach ($seoData['analysis'] as $item)
+                                                <li class="d-flex align-items-center mb-2">
+                                                    @if ($item['status'] === 'success')
+                                                        <i class="fa fa-check-circle text-success me-2"></i>
+                                                    @elseif($item['status'] === 'warning')
+                                                        <i class="fa fa-exclamation-circle text-warning me-2"></i>
+                                                    @else
+                                                        <i class="fa fa-info-circle text-muted me-2"></i>
+                                                    @endif
+                                                    <span>{{ $item['message'] }}</span>
+                                                </li>
+                                            @endforeach
+                                        @endif
                                     </ul>
                                 </div>
                                 <div class="alert alert-info mb-3" style="font-size: 0.95rem;">

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use App\Traits\HasSeo;
 use App\RankmathSEOForLaravel\Services\SeoAnalyzer;
 use App\RankmathSEOForLaravel\DTO\SeoAnalysisResult;
+use App\RankmathSEOForLaravel\Traits\HasSeo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;

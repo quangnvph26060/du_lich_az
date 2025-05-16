@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Blog;
 use App\Models\Catalogue;
 use App\Models\Keyword;
+use App\Models\SeoScore;
 use App\Models\Tag;
 use App\RankmathSEOForLaravel\Services\SeoAnalyzer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Yajra\DataTables\DataTables;
 
 class BlogController extends Controller
 {
@@ -22,7 +22,7 @@ class BlogController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
         $blog = new Blog();
 
@@ -32,11 +32,17 @@ class BlogController extends Controller
         $tags = Tag::all();
         $keywords = Keyword::all();
 
-        return view('backend.blogs.form', compact('catalogues', 'tags', 'keywords', 'blog'));
+        $seoData = $this->getSeoAnalysis($request);
+
+        return view(
+            'backend.blogs.form',
+            compact('catalogues', 'tags', 'keywords', 'blog', 'seoData')
+
+        );
     }
 
 
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
         $blog = Blog::with('blogTags', 'keywords')->findOrFail($id);
         // dd($blog->blogTags, $blog->keywords);
@@ -44,7 +50,22 @@ class BlogController extends Controller
         $tags = Tag::all();
         $keywords = Keyword::all();
 
-        return view('backend.blogs.form', compact('blog', 'catalogues', 'tags', 'keywords'));
+        $seoData = $this->getSeoAnalysis($request, $id);
+        if (isset($seoData['analysis']) && is_array($seoData['analysis'])) {
+            $seoData['analysis'] = collect($seoData['analysis'])
+                ->unique(function ($item) {
+                    return $item['status'] . $item['message'];
+                })
+                ->values()
+                ->toArray();
+        }
+
+        // dd($seoData);
+        return view(
+            'backend.blogs.form',
+            compact('catalogues', 'tags', 'keywords', 'blog', 'seoData')
+
+        );
     }
 
     public function store(Request $request)
@@ -63,10 +84,10 @@ class BlogController extends Controller
             'seo_description' => 'nullable|string|max:160', // Tối ưu: 120-160 ký tự
 
             // Optional SEO fields
-            'tags' => 'nullable|array',
+            'tags' => 'nullable',
             'tags.*' => 'string|max:30',
 
-            'keywords' => 'nullable|array',
+            'keywords' => 'nullable',
             'keywords.*' => 'string|max:30',
 
             'status' => 'nullable|boolean',
@@ -134,6 +155,7 @@ class BlogController extends Controller
             return redirect()->route('admin.blogs.index')->with('success', 'Bài viết đã được thêm thành công');
         } catch (\Exception $e) {
             // Nếu có lỗi, bắt và hiển thị thông báo lỗi
+            logger($e->getMessage());
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
@@ -217,7 +239,7 @@ class BlogController extends Controller
             $blog->update($credentials);
 
             // Trả về thông báo thành công
-            return redirect()->route('admin.blogs.index')->with('success', 'Bài viết đã được sửa thành công');
+            return redirect()->back()->with('success', 'Bài viết đã được sửa thành công');
         } catch (\Exception $e) {
             // Nếu có lỗi, bắt và hiển thị thông báo lỗi
             return redirect()->back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
@@ -295,16 +317,54 @@ class BlogController extends Controller
         ]);
     }
 
-    public function getSeoAnalysis(Request $request, $id)
+    public function getSeoAnalysis(Request $request, $id = null)
     {
+        if (!$id) {
+            return [
+                'blog' => null,
+                'seoScore' => null,
+                'keywords' => [],
+                'analysis' => [],
+                'hasWarning' => false,
+                'seoScoreValue' => 0,
+            ];
+        }
+
         $blog = Blog::findOrFail($id);
 
-        return response()->json([
-            'seo_score' => $blog->seo_score,
-            'seo_suggestions' => $blog->seo_suggestions,
-            'focus_keyword' => $blog->focus_keyword,
-            'secondary_keywords' => $blog->secondary_keywords,
-            'analysis' => $blog->seo_analysis
-        ]);
+        // Giả sử blog có relation keywords (từ khóa nhiều hay 1 cái chính)
+        // Lấy từ khóa chính ví dụ:
+        $focusKeyword = $blog->keywords->first()->name ?? '';
+
+        $analyzer = app(\App\RankmathSEOForLaravel\Services\SeoAnalyzer::class);
+
+        // Sử dụng analyze với đủ tham số: title, content, focusKeyword
+        $analysisResult = $analyzer->analyze($blog->title, $blog->content, $focusKeyword);
+
+        $analysis = collect($analysisResult->checks)->map(function ($item) {
+            $status = $item['passed'] ? 'success' : 'warning'; // Hoặc xử lý logic tùy theo cấu trúc `checks`
+            return array_merge($item, ['status' => $status]);
+        })->toArray();
+
+        $hasWarning = collect($analysis)->contains(fn($item) => $item['passed'] === false);
+        $totalCriteria = count($analysis);
+        $successCount = collect($analysis)->where('status', 'success')->count();
+        $warningCount = collect($analysis)->where('status', 'warning')->count();
+
+        $seoScoreValue = $totalCriteria > 0
+            ? round(($successCount + $warningCount * 0.5) / $totalCriteria * 100)
+            : 0;
+
+        $seoScore = SeoScore::where('blog_id', $blog->id)->first();
+
+        return [
+            'blog' => $blog,
+            'seoScore' => $seoScore,
+            'keywords' => $blog->keywords, // hoặc lấy theo ý bạn
+            'analysis' => $analysis,
+            'hasWarning' => $hasWarning,
+            'seoScoreValue' => $seoScoreValue,
+        ];
     }
+
 }

@@ -7,29 +7,42 @@ class KeywordDensityRule implements RuleInterface
     public function check(string $title, string $content, string $focusKeyword): array
     {
         $content = strip_tags($content);
-        
-        // Đếm tổng số từ
-        $totalWords = str_word_count($content);
-        
-        // Đếm số lần xuất hiện từ khóa
-        $keywordCount = substr_count(strtolower($content), strtolower($focusKeyword));
-        
-        // Tính mật độ từ khóa
+        $content = trim($content);
+
+        $wordsArray = preg_split('/\s+/u', $content);
+        $totalWords = count($wordsArray);
+
+        if (empty($focusKeyword) || $totalWords === 0) {
+            return [
+                'rule' => 'keyword_density',
+                'passed' => false,
+                'message' => 'Từ khóa hoặc nội dung không hợp lệ để tính mật độ từ khóa.',
+                'score' => 0,
+                'suggestion' => 'Vui lòng cung cấp từ khóa và nội dung hợp lệ.',
+                'status' => 'warning',
+            ];
+        }
+
+        $pattern = '/\b' . preg_quote(mb_strtolower($focusKeyword), '/') . '\b/u';
+        preg_match_all($pattern, mb_strtolower($content), $matches);
+        $keywordCount = count($matches[0]);
+
         $density = ($keywordCount / $totalWords) * 100;
-        
-        // Kiểm tra mật độ từ khóa (0.5% - 2.5%)
         $isOptimal = $density >= 0.5 && $density <= 2.5;
-        
+
+        $message = $isOptimal
+            ? "Mật độ từ khóa tối ưu (" . rtrim(rtrim(number_format($density, 2), '0'), '.') . "%)"
+            : "Mật độ từ khóa " . rtrim(rtrim(number_format($density, 2), '0'), '.') . "% (nên từ 0.5% đến 2.5%)";
+
         return [
             'rule' => 'keyword_density',
             'passed' => $isOptimal,
-            'message' => $isOptimal ? 
-                        "Mật độ từ khóa tối ưu ({$density}%)" : 
-                        "Mật độ từ khóa {$density}% (nên từ 0.5% đến 2.5%)",
+            'message' => $message,
             'score' => $isOptimal ? 10 : 0,
-            'suggestion' => $density < 0.5 ? 
-                          'Tăng số lần xuất hiện từ khóa' : 
-                          'Giảm số lần xuất hiện từ khóa'
+            'suggestion' => !$isOptimal
+                ? ($density < 0.5 ? 'Tăng số lần xuất hiện từ khóa' : 'Giảm số lần xuất hiện từ khóa')
+                : '',
+            'status' => $isOptimal ? 'success' : 'warning',
         ];
     }
 }

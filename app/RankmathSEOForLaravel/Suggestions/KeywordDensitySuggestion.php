@@ -1,10 +1,11 @@
 <?php
 
-namespace App\RankmathSEOForLaravel\Rules;
+namespace App\RankmathSEOForLaravel\Suggestions;
+use App\RankmathSEOForLaravel\Suggestions\SuggestionInterface;
 
-class KeywordDensityRule implements RuleInterface
+class KeywordDensitySuggestion implements SuggestionInterface
 {
-    public function check(string $title, string $content, string $focusKeyword): array
+    public function check(string $title, string $content, string $focusKeyword, string $shortDescription, string $slug): array
     {
         $content = strip_tags($content);
         $content = trim($content);

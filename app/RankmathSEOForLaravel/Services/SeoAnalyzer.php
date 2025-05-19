@@ -3,13 +3,18 @@
 namespace App\RankmathSEOForLaravel\Services;
 
 use App\RankmathSEOForLaravel\DTO\SeoAnalysisResult;
+use App\RankmathSEOForLaravel\Rules\ContentLengthRule;
 use App\RankmathSEOForLaravel\Rules\KeywordInTitleRule;
 use App\RankmathSEOForLaravel\Rules\RuleInterface;
 use App\RankmathSEOForLaravel\Rules\KeywordInDescriptionRule;
-use App\RankmathSEOForLaravel\Rules\KeywordDensityRule;
 use App\RankmathSEOForLaravel\Rules\InternalLinkRule;
 use App\RankmathSEOForLaravel\Rules\ImageAltRule;
+use App\RankmathSEOForLaravel\Rules\KeywordInSlugRule;
 use App\RankmathSEOForLaravel\Rules\KeywordPositionRule;
+use App\RankmathSEOForLaravel\Suggestions\HeadingStructureSuggestion;
+use App\RankmathSEOForLaravel\Suggestions\KeywordDensitySuggestion;
+use App\RankmathSEOForLaravel\Suggestions\SuggestionInterface;
+use App\RankmathSEOForLaravel\Suggestions\UrlLengthSuggestion;
 
 class SeoAnalyzer
 {
@@ -19,73 +24,96 @@ class SeoAnalyzer
             'keyword_in_title',
             'keyword_in_description',
             'keyword_density',
+            'keyword_in_slug',
         ],
         'content' => [
             'internal_link',
             'image_alt',
+            'content_length',
+
         ],
     ];
 
     public function __construct()
     {
         $this->rules = [
+
+            // Rules
             new KeywordInTitleRule(),
             new KeywordInDescriptionRule(),
-            new KeywordDensityRule(),
             new InternalLinkRule(),
             new ImageAltRule(),
             new KeywordPositionRule(),
+            new KeywordInSlugRule(),
+            new ContentLengthRule(),
+
+            // Suggesstion
+            new KeywordDensitySuggestion(),
+            new HeadingStructureSuggestion(),
+            new UrlLengthSuggestion(),
         ];
     }
 
-    public function analyze(string $title, string $content, string $focusKeyword): SeoAnalysisResult
+    public function analyze(string $title, string $content, string $focusKeyword, string $shortDescription, string $slug): SeoAnalysisResult
     {
-        $totalScore = 0;
-        $maxScore = 0;
         $checks = [];
-        $groupScores = [];
+        $suggestions = [];
 
-        // Lọc các rule đúng interface để không gọi check nhiều lần không cần thiết
         $validRules = array_filter($this->rules, fn($r) => $r instanceof RuleInterface);
+        $suggestionRules = array_filter($this->rules, fn($r) => $r instanceof SuggestionInterface);
 
-        foreach ($this->ruleGroups as $group => $ruleNames) {
-            $groupScore = 0;
-            $groupMaxScore = 0;
+        $groupScores = [
+            'basic' => ['score' => 0, 'max_score' => 0],
+            'content' => ['score' => 0, 'max_score' => 0],
+        ];
 
-            foreach ($validRules as $rule) {
-                $result = $rule->check($title, $content, $focusKeyword);
-                $checks[] = $result;
+        foreach ($validRules as $rule) {
+            $result = $rule->check($title, $content, $focusKeyword, $shortDescription);
+            $checks[] = $result;
 
+            foreach ($this->ruleGroups as $group => $ruleNames) {
                 if (in_array($result['rule'], $ruleNames)) {
-                    $groupScore += $result['score'];
-                    $groupMaxScore += 10; // max score mặc định 10 cho mỗi rule
+                    $groupScores[$group]['score'] += $result['score'];
+                    $groupScores[$group]['max_score'] += 10;
                 }
             }
+        }
 
-            $groupScores[$group] = [
-                'score' => $groupScore,
-                'max_score' => $groupMaxScore,
-                'percentage' => $groupMaxScore > 0 ? ($groupScore / $groupMaxScore) * 100 : 0,
-            ];
+        foreach ($groupScores as &$group) {
+            $group['percentage'] = $group['max_score'] > 0
+                ? ($group['score'] / $group['max_score']) * 100
+                : 0;
+        }
+        unset($group);
 
-            $totalScore += $groupScore;
-            $maxScore += $groupMaxScore;
+        $totalScore = array_sum(array_column($groupScores, 'score'));
+        $maxScore = array_sum(array_column($groupScores, 'max_score'));
+
+        // Kiểm tra phần suggestions như cũ
+        foreach ($suggestionRules as $suggestionRule) {
+            $result = $suggestionRule->check($title, $content, $focusKeyword, $shortDescription, $slug);
+            $suggestions[] = $result;
         }
 
         return new SeoAnalysisResult(
             $totalScore,
             $checks,
             $groupScores,
-            $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0
+            $maxScore > 0 ? ($totalScore / $maxScore) * 100 : 0,
+            $suggestions,
         );
     }
+
 
     public function analyzeFromBlog(\App\Models\Blog $blog): SeoAnalysisResult
     {
         return $this->analyze(
             $blog->title,
             $blog->content,
-            $blog->seo_title ?? ''
+            $blog->seo_title ?? '',
+            $blog->short_description ?? '',
+            $blog->slug,
+
         );
     }
 
@@ -99,11 +127,6 @@ class SeoAnalyzer
         $this->rules[] = $rule;
     }
 
-    public function removeRule(string $ruleName): void
-    {
-        $this->rules = array_filter($this->rules, function ($rule) use ($ruleName) {
-            return !($rule instanceof RuleInterface && $rule->check('', '', '')['rule'] === $ruleName);
-        });
-    }
+
 }
 

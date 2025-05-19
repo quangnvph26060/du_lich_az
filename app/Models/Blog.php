@@ -44,7 +44,7 @@ class Blog extends Model
 
     public function blogTags()
     {
-        return $this->belongsToMany(Tag::class, 'blog_tag');
+        return $this->belongsToMany(Tag::class, 'blog_tag', 'blog_id', 'tag_id');
     }
 
     public function keywords()
@@ -62,27 +62,9 @@ class Blog extends Model
         return $analyzer->analyzeFromBlog($this);
     }
 
-    public function getSeoScoreAttribute(): ?float
+    public function seoScore()
     {
-        return $this->seo_analysis?->getPercentage();
+        return $this->hasOne(SeoScore::class, 'blog_id', 'id');
     }
 
-    public function getSeoSuggestionsAttribute(): array
-    {
-        return $this->seo_analysis?->getSuggestions() ?? [];
-    }
-
-    public function getFocusKeywordAttribute(): ?string
-    {
-        return $this->keywords()->first()?->name;
-    }
-
-    public function getSecondaryKeywordsAttribute(): array
-    {
-        return $this->keywords()
-            ->skip(1)
-            ->take(5)
-            ->pluck('name')
-            ->toArray();
-    }
 }

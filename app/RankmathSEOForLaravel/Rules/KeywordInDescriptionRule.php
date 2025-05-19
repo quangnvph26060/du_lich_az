@@ -4,23 +4,43 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class KeywordInDescriptionRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword): array
+    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
     {
-        // Lấy meta description từ content
-        preg_match('/<meta[^>]+name=["\']description["\'][^>]+content=["\']([^"\']+)["\'][^>]*>/', $content, $matches);
-        $description = $matches[1] ?? '';
-        
-        // Kiểm tra từ khóa có trong description không
-        $hasKeyword = stripos($description, $focusKeyword) !== false;
-        
+        $description = trim(strip_tags($shortDescription ?? ''));
+
+        if (empty($focusKeyword)) {
+            return [
+                'rule' => 'keyword_in_short_description',
+                'passed' => false,
+                'message' => 'Không có từ khóa để kiểm tra trong mô tả ngắn.',
+                'score' => 0,
+                'suggestion' => 'Nhập từ khóa chính để kiểm tra trong mô tả ngắn.',
+                'status' => 'danger',
+            ];
+        }
+
+        if (empty($description)) {
+            return [
+                'rule' => 'keyword_in_short_description',
+                'passed' => false,
+                'message' => 'Mô tả ngắn đang trống.',
+                'score' => 0,
+                'suggestion' => 'Viết mô tả ngắn và thêm từ khóa vào trong đó.',
+                'status' => 'danger',
+            ];
+        }
+
+        $hasKeyword = stripos(mb_strtolower($description), mb_strtolower($focusKeyword)) !== false;
+
         return [
-            'rule' => 'keyword_in_description',
+            'rule' => 'keyword_in_short_description',
             'passed' => $hasKeyword,
-            'message' => $hasKeyword ? 
-                        'Từ khóa có trong meta description' : 
-                        'Từ khóa chưa có trong meta description',
+            'message' => $hasKeyword
+                ? 'Từ khóa có trong mô tả ngắn.'
+                : 'Từ khóa chưa có trong mô tả ngắn.',
             'score' => $hasKeyword ? 10 : 0,
-            'suggestion' => 'Thêm từ khóa vào meta description để tăng tính liên quan'
+            'suggestion' => $hasKeyword ? '' : 'Thêm từ khóa vào mô tả ngắn để tăng tính liên quan.',
+            'status' => $hasKeyword ? 'success' : 'warning',
         ];
     }
 }

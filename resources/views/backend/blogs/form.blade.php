@@ -6,18 +6,8 @@
 
 @endphp
 
-@section('title', isset($blog) ? 'Sửa bài viết' : 'Thêm mới bài viết')
+@section('title', 'Form thêm và chỉnh sửa bài viết')
 @section('content')
-
-@if ($errors->any())
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
     <div class="container-fluid">
         <a href="{{ route('admin.blogs.index') }}" class="btn btn-link mb-3" style="font-size:1.1rem;font-weight:500;">
             <i class="fa fa-arrow-left me-1"></i> Quay lại danh sách
@@ -45,6 +35,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
                             <div class="form-group mb-3">
                                 <label for="slug">Slug</label>
                                 <input type="text" id="slug" name="slug"
@@ -56,6 +47,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
                             <div class="form-group mb-3">
                                 <label for="short_description">Mô tả ngắn</label>
                                 <input type="text" id="short_description" name="short_description"
@@ -66,6 +58,7 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+
                             <div class="form-group mb-3">
                                 <label for="content">Nội dung</label>
                                 <textarea id="content" name="content" class="form-control ckeditor @error('content') is-invalid @enderror"
@@ -154,28 +147,48 @@
                                 <!-- Phần hiển thị điểm SEO -->
                                 <div class="mb-3">
                                     <h5 class="mb-0">SEO cơ bản
+                                        @php
+                                            $score = $seoScoreValue ?? 0;
+                                        @endphp
                                         <span
-                                            class="badge {{ isset($hasWarning) && $hasWarning ? 'bg-warning' : 'bg-success' }} ms-2">
-                                            {{ isset($hasWarning) && $hasWarning ? 'Cần cải thiện' : 'Tất cả điều tốt' }}
+                                            class="badge 
+                                            {{ $score >= 80 ? 'bg-success' : ($score >= 70 ? 'bg-warning text-dark' : 'bg-danger') }} ms-2">
+                                            {{ $score >= 80 ? 'Tất cả điều tốt' : ($score >= 70 ? 'Cần cải thiện nhẹ' : 'Cần tối ưu') }}
                                         </span>
                                     </h5>
-                                    <ul class="list-unstyled mb-0 mt-2">
+
+                                    <ul class="list-unstyled mb-0 mt-2" id="seoAnalysis">
                                         @if (isset($seoData['analysis']) && count($seoData['analysis']))
                                             @foreach ($seoData['analysis'] as $item)
                                                 <li class="d-flex align-items-center mb-2">
-                                                    @if ($item['status'] === 'success')
-                                                        <i class="fa fa-check-circle text-success me-2"></i>
-                                                    @elseif($item['status'] === 'warning')
-                                                        <i class="fa fa-exclamation-circle text-warning me-2"></i>
-                                                    @else
-                                                        <i class="fa fa-info-circle text-muted me-2"></i>
-                                                    @endif
-                                                    <span>{{ $item['message'] }}</span>
+                                                    @php
+                                                        switch ($item['status']) {
+                                                            case 'success':
+                                                                $icon = 'fa-check-circle';
+                                                                $colorClass = 'text-success'; // xanh lá
+                                                                break;
+                                                            case 'warning':
+                                                                $icon = 'fa-exclamation-circle';
+                                                                $colorClass = 'text-warning'; // vàng
+                                                                break;
+                                                            case 'danger':
+                                                                $icon = 'fa-times-circle';
+                                                                $colorClass = 'text-danger'; // đỏ
+                                                                break;
+                                                            default:
+                                                                $icon = 'fa-info-circle';
+                                                                $colorClass = 'text-muted'; // xám
+                                                        }
+                                                    @endphp
+                                                    <i class="fa {{ $icon }} {{ $colorClass }} me-2 fs-5"></i>
+                                                    <span class="text-dark">{{ $item['message'] }}</span>
                                                 </li>
                                             @endforeach
                                         @endif
                                     </ul>
+
                                 </div>
+
                                 <div class="alert alert-info mb-3" style="font-size: 0.95rem;">
                                     <i class="fa fa-info-circle"></i> Meta keywords was removed by Google, you don't
                                     need to add
@@ -190,7 +203,7 @@
                     <div class="card mb-3" id="seo-card-error">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">Cẩn cải thiện<span class="badge bg-danger ms-2">2 Lỗi</span></h5>
+                                <h5 class="mb-0">Cẩn cải thiện</h5>
 
                                 <a href="#" id="edit-seo-btn-error">Edit SEO meta</a>
                             </div>
@@ -201,10 +214,20 @@
                                 <div class="mb-3">
                                     <h5 class="mb-0">Bổ sung</h5>
                                     <ul class="list-unstyled mb-0 mt-2">
-                                        <li><i class="fa fa-times-circle text-danger"></i> Tiêu đề chưa chứa từ khoá chính.
-                                        </li>
-                                        <li><i class="fa fa-times-circle text-danger"></i> Nội dung quá ngắn, cần tối thiểu
-                                            300 từ.</li>
+                                        @if (isset($seoData['suggestions']) && count($seoData['suggestions']))
+                                            @foreach ($seoData['suggestions'] as $item)
+                                                <li class="d-flex align-items-center mb-2">
+                                                    @if ($item['status'] === 'success')
+                                                        <i class="fa fa-check-circle text-success me-2"></i>
+                                                    @elseif($item['status'] === 'warning')
+                                                        <i class="fa fa-exclamation-circle text-warning me-2"></i>
+                                                    @else
+                                                        <i class="fa fa-info-circle text-muted me-2"></i>
+                                                    @endif
+                                                    <span>{{ $item['message'] }}</span>
+                                                </li>
+                                            @endforeach
+                                        @endif
                                     </ul>
                                 </div>
                             </div>
@@ -230,7 +253,7 @@
                                             <!-- SEO Title -->
                                             <div class="form-group mb-3">
                                                 <label for="seo_title" class="form-label">
-                                                    SEO Title
+                                                    SEO tiêu đề
                                                     <span class="text-muted" id="seo_title_counter">0/60</span>
                                                 </label>
                                                 <input type="text" class="form-control" id="seo_title"
@@ -243,7 +266,7 @@
                                             <!-- SEO Description -->
                                             <div class="form-group mb-3">
                                                 <label for="seo_description" class="form-label">
-                                                    SEO Description
+                                                    SEO nội dung
                                                     <span class="text-muted" id="seo_description_counter">0/160</span>
                                                 </label>
                                                 <textarea class="form-control" id="seo_description" name="seo_description" rows="3"
@@ -294,9 +317,9 @@
                     <!-- Catalogue -->
                     <div class="card mb-3">
                         <div class="card-body">
-                            <label class="mb-2 fw-semibold">Catalogues <span class="text-danger">*</span></label>
+                            <label class="mb-2 fw-semibold">Danh mục <span class="text-danger">*</span></label>
                             <select class="form-select select2" name="catalogue_id" required>
-                                <option value="">-- Chọn Catalogue --</option>
+                                <option value="">-- Chọn danh mục --</option>
                                 @foreach ($catalogues as $catalogue)
                                     <option value="{{ $catalogue->id }}"
                                         {{ old('catalogue_id', $blog->catalogue_id ?? '') == $catalogue->id ? 'selected' : '' }}>
@@ -641,6 +664,83 @@
                         'Mô tả SEO';
                 });
                 seoDescriptionCounter.textContent = `${seoDescription.value.length}/160`;
+            }
+        });
+    </script>
+
+    {{-- Xử lí khi thêm mới bài viết --}}
+    <script>
+        $(document).ready(function() {
+            let seoTimeout;
+
+            // Gắn sự kiện input cho các trường input/textarea bình thường
+            $('#title, #keywords, #short_description, #slug').on('input', function() {
+                clearTimeout(seoTimeout);
+                seoTimeout = setTimeout(runSeoAnalysis, 500);
+            });
+
+            // Lắng nghe sự kiện thay đổi nội dung trong CKEditor
+            CKEDITOR.instances['content'].on('change', function() {
+                clearTimeout(seoTimeout);
+                seoTimeout = setTimeout(runSeoAnalysis, 500);
+            });
+
+            function runSeoAnalysis() {
+                const data = {
+                    title: $('#title').val(),
+                    content: CKEDITOR.instances['content'].getData(),
+                    keywords: $('#keywords').val().split(',').map(k => k.trim()),
+                    short_description: $('#short_description').val(),
+                    slug: $('#slug').val(),
+                    _token: '{{ csrf_token() }}'
+                };
+
+                console.log('Gửi dữ liệu SEO:', data);
+
+                $.ajax({
+                    url: "{{ route('admin.blogs.seo.analysis.live') }}",
+                    method: "POST",
+                    data: data,
+                    success: function(response) {
+                        $('#seoScoreValue').text(response.seoScoreValue);
+
+                        let analysis = response.analysis || [];
+
+                        let listHtml = analysis.map(item => {
+                            let icon = 'fa-info-circle';
+                            let colorClass = 'text-muted';
+
+                            switch (item.status) {
+                                case 'success':
+                                    icon = 'fa-check-circle';
+                                    colorClass = 'text-success';
+                                    break;
+                                case 'warning':
+                                    icon = 'fa-exclamation-circle';
+                                    colorClass = 'text-warning';
+                                    break;
+                                case 'danger':
+                                    icon = 'fa-times-circle';
+                                    colorClass = 'text-danger';
+                                    break;
+                            }
+
+                            return `
+                            <li class="d-flex align-items-center mb-2">
+                                <i class="fa ${icon} ${colorClass} me-2 fs-5"></i>
+                                <span class="text-dark">${item.message}</span>
+                            </li>`;
+                        }).join('');
+
+                        $('#seoAnalysis').html(listHtml);
+                        console.log('Phản hồi SEO:', response);
+
+                    },
+                    error: function(xhr) {
+                        console.error('Lỗi SEO:', xhr);
+                    }
+
+                });
             }
         });
     </script>

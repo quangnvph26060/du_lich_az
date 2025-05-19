@@ -4,6 +4,6 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 interface RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword): array;
+    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array;
 
 }

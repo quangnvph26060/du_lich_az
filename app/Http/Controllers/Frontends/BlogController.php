@@ -12,7 +12,7 @@ class BlogController extends Controller
     {
         $blog = Blog::where('slug', $slug)
             ->where('status', 1)
-            ->with(['catalogue', 'tags', 'keywords'])
+            ->with(['catalogue', 'blogTags', 'keywords'])
             ->firstOrFail();
 
         // Tăng lượt xem

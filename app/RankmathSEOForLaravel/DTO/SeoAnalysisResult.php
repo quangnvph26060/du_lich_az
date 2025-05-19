@@ -9,10 +9,13 @@ class SeoAnalysisResult
     public array $groupScores;
     public float $percentage;
 
-    public function __construct(float $score, array $checks, array $groupScores, float $percentage)
+    public array $suggestions;
+
+    public function __construct(float $score, array $checks, array $groupScores, float $percentage, array $suggestions)
     {
         $this->score = $score;
         $this->checks = $checks;
+        $this->suggestions = $suggestions;
         $this->groupScores = $groupScores;
         $this->percentage = $percentage;
     }

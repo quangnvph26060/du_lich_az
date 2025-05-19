@@ -22,9 +22,10 @@
                             <th>STT</th>
                             <th>Ảnh</th>
                             <th>Tiêu đề</th>
-                            <th>Catalogues</th>
+                            <th>Danh mục</th>
                             <th>Ngày tạo</th>
                             <th>Lượt xem</th>
+                            <th>Điểm SEO</th>
                             <th>Trạng thái</th>
                             <th>Action</th>
                         </tr>
@@ -41,6 +42,30 @@
                                 <td class="text-left">{{ $blog->catalogue->name }}</td>
                                 <td class="text-center">{{ \Carbon\Carbon::parse($blog->posted_at)->format('d/m/Y') }}</td>
                                 <td class="text-center">{{ number_format($blog->view_count) }}</td>
+                                <td class="text-center align-middle">
+                                    @php
+                                        $score = $blog->seoScore->seo_score ?? null;
+
+                                        if (is_null($score)) {
+                                            $bgClass = 'bg-secondary';
+                                            $text = 'Chưa có';
+                                        } elseif ($score < 50) {
+                                            $bgClass = 'bg-danger';
+                                            $text = $score;
+                                        } elseif ($score < 80) {
+                                            $bgClass = 'bg-warning';
+                                            $text = $score;
+                                        } else {
+                                            $bgClass = 'bg-success';
+                                            $text = $score;
+                                        }
+                                    @endphp
+
+                                    <span class="badge {{ $bgClass }} text-white px-3 py-2 rounded">
+                                        {{ $text }}
+                                    </span>
+                                </td>
+
                                 <td class="text-center">
                                     @if ($blog->status == 1)
                                         <span class="badge bg-success">Đã xuất bản</span>
@@ -140,11 +165,16 @@
                     "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json"
                 },
                 "pageLength": 5,
-                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "Tất cả"]],
+                "lengthMenu": [
+                    [5, 10, 25, 50, -1],
+                    [5, 10, 25, 50, "Tất cả"]
+                ],
                 "ordering": true,
                 "searching": true,
                 "responsive": true,
-                "order": [[1, 'desc']],
+                "order": [
+                    [1, 'desc']
+                ],
                 "columnDefs": [{
                     "targets": [0, 8], // Cột checkbox và action
                     "orderable": false
@@ -173,7 +203,7 @@
                         // Gửi request xóa
                         $.ajax({
                             url: `{{ route('admin.blogs.delete', '') }}/${id}`,
-                            type: 'GET',
+                            type: 'DELETE',
                             headers: {
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
@@ -181,7 +211,8 @@
                                 if (response.success) {
                                     Swal.fire(
                                         'Đã xóa!',
-                                        response.message || 'Bài viết đã được xóa thành công.',
+                                        response.message ||
+                                        'Bài viết đã được xóa thành công.',
                                         'success'
                                     ).then(() => {
                                         window.location.reload();
@@ -189,7 +220,8 @@
                                 } else {
                                     Swal.fire(
                                         'Lỗi!',
-                                        response.message || 'Có lỗi xảy ra khi xóa bài viết.',
+                                        response.message ||
+                                        'Có lỗi xảy ra khi xóa bài viết.',
                                         'error'
                                     );
                                 }
@@ -198,7 +230,8 @@
                                 console.error('Lỗi:', xhr);
                                 Swal.fire(
                                     'Lỗi!',
-                                    xhr.responseJSON?.message || 'Có lỗi xảy ra khi xóa bài viết.',
+                                    xhr.responseJSON?.message ||
+                                    'Có lỗi xảy ra khi xóa bài viết.',
                                     'error'
                                 );
                             }

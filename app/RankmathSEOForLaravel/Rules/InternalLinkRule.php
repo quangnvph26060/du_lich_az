@@ -4,17 +4,21 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class InternalLinkRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword): array
+    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
     {
-        // Kiểm tra có ít nhất 1 internal link
-        $hasInternalLink = preg_match('/<a[^>]+href=["\'](?!https?:\/\/)[^"\']+["\'][^>]*>/', $content);
-        
+        $decodedContent = html_entity_decode($content);
+
+        preg_match_all('/<a[^>]+href=["\']([^"\']+)["\']/', $decodedContent, $matches);
+
+        $hasAnyLink = !empty($matches[1]);
+
         return [
             'rule' => 'internal_link',
-            'passed' => $hasInternalLink,
-            'message' => $hasInternalLink ? 'Đã có internal link trong bài viết' : 'Chưa có internal link trong bài viết',
-            'score' => $hasInternalLink ? 10 : 0,
-            'suggestion' => 'Thêm ít nhất 1 internal link để tăng tính liên kết'
+            'passed' => $hasAnyLink,
+            'message' => $hasAnyLink ? 'Đã có liên kết trong bài viết.' : 'Chưa có liên kết trong bài viết.',
+            'score' => $hasAnyLink ? 10 : 0,
+            'status' => $hasAnyLink ? 'success' : 'danger',
+            'suggestion' => $hasAnyLink ? '' : 'Thêm ít nhất 1 liên kết để tăng giá trị SEO cho bài viết.',
         ];
     }
 }

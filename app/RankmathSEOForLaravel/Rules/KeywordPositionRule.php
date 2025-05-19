@@ -4,7 +4,7 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class KeywordPositionRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword): array
+    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
     {
         $content = strip_tags($content);
         $content = trim($content);
@@ -16,13 +16,14 @@ class KeywordPositionRule implements RuleInterface
                 'message' => 'Không có từ khóa để kiểm tra vị trí.',
                 'score' => 0,
                 'suggestion' => 'Hãy nhập từ khóa chính.',
-                'status' => 'warning',
+                'status' => 'danger',
             ];
         }
 
         $length = mb_strlen($content);
         $firstTenPercent = mb_substr($content, 0, intval($length * 0.1));
         $found = mb_stripos($firstTenPercent, $focusKeyword) !== false;
+        $score = $found ? 10 : 0;
 
         return [
             'rule' => 'keyword_position',
@@ -30,9 +31,9 @@ class KeywordPositionRule implements RuleInterface
             'message' => $found
                 ? 'Từ khóa xuất hiện trong 10% đầu nội dung.'
                 : 'Từ khóa không xuất hiện trong 10% đầu nội dung.',
-            'score' => $found ? 10 : 0,
+            'score' => $score,
             'suggestion' => $found ? '' : 'Đưa từ khóa vào đoạn đầu bài viết.',
-            'status' => $found ? 'success' : 'warning',
+            'status' => $found ? 'success' : ($score === 0 ? 'danger' : 'warning'),
         ];
     }
 }

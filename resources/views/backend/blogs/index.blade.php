@@ -8,7 +8,7 @@
             <div class="card-tools">
                 <a href="{{ route('admin.blogs.create') }}" class="btn btn-primary btn-sm">Thêm mới bài viết (+)</a>
                 <button onclick="window.location.reload()" class="btn btn-info btn-sm ms-2">
-                    <i class="fa-solid fa-rotate"></i> Tải lại
+                    <i class="fa-solid fa-rotate me-2"></i> Tải lại
                 </button>
             </div>
         </div>
@@ -161,9 +161,6 @@
     <script type="text/javascript">
         $(document).ready(function() {
             $('#myTable').DataTable({
-                "language": {
-                    "url": "//cdn.datatables.net/plug-ins/1.10.24/i18n/Vietnamese.json"
-                },
                 "pageLength": 5,
                 "lengthMenu": [
                     [5, 10, 25, 50, -1],

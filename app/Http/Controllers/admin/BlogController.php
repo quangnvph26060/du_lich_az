@@ -30,7 +30,6 @@ class BlogController extends Controller
         $catalogues = Catalogue::all();
         $tags = Tag::all();
         $keywords = Keyword::all();
-
         $seoData = $this->getSeoAnalysis($request);
 
         return view(
@@ -38,6 +37,7 @@ class BlogController extends Controller
             compact('catalogues', 'tags', 'keywords', 'blog', 'seoData')
 
         );
+
     }
 
 
@@ -67,7 +67,7 @@ class BlogController extends Controller
                 ->values()
                 ->toArray();
         }
-        // dd(vars: $seoData['suggestions']);
+        // dd(vars: $seoData);
 
         return view(
             'backend.blogs.form',
@@ -133,17 +133,16 @@ class BlogController extends Controller
 
         try {
             // dd(vars: $request->all());
-
             // Tạo danh mục mới
             $blog = Blog::create([
                 'title' => $request->input('title'),
-                'slug' => Str::slug($request->input('title')),
+                'slug' => Str::slug($request->title),
                 'content' => $request->input('content'),
                 'image' => saveImage($request, 'image', 'new_images'),
                 'catalogue_id' => $request->input('catalogue_id'),
                 'short_description' => $request->input('short_description'),
-                'seo_title' => $request->input('seo_title'),
-                'seo_description' => $request->input('seo_description'),
+                'seo_title' => $request->seo_title,
+                'seo_description' => $request->seo_description,
                 'posted_at' => now(),
                 'view_count' => '0',
                 'status' => $request->input('status', 0),
@@ -154,19 +153,15 @@ class BlogController extends Controller
             $blog->keywords()->sync($arrayKeywords);
 
 
-            if ($request->hasFile('image')) {
-                $credentials['image'] = saveImage($request, 'image', 'new_images');
-            }
-
             // Sau khi blog đã được tạo và gán từ khóa, tag
             $focusKeyword = $blog->keywords->first()->name ?? '';
-            $analyzer = app(\App\RankmathSEOForLaravel\Services\SeoAnalyzer::class);
+            $analyzer = app(SeoAnalyzer::class);
 
             $analysisResult = $analyzer->analyze(
                 $blog->title,
                 $blog->content,
                 $focusKeyword,
-                $blog->short_description ?? '',
+                $blog->seo_description ?? '',
                 $blog->slug
             );
 
@@ -346,9 +341,9 @@ class BlogController extends Controller
 
         $focusKeyword = $blog->keywords->first()->name ?? '';
 
-        $analyzer = app(\App\RankmathSEOForLaravel\Services\SeoAnalyzer::class);
+        $analyzer = app(SeoAnalyzer::class);
 
-        $analysisResult = $analyzer->analyze($blog->title, $blog->content, $focusKeyword, $blog->short_description ?? '', $blog->slug);
+        $analysisResult = $analyzer->analyze($blog->seo_title, $blog->content, $focusKeyword, $blog->seo_description ?? '', $blog->slug);
 
         $analysis = collect($analysisResult->checks)->map(function ($item) {
             $status = $item['status'] ?? ($item['passed'] ? 'success' : 'warning');
@@ -379,18 +374,18 @@ class BlogController extends Controller
 
     public function getSeoAnalysisLive(Request $request)
     {
-        $title = $request->input('title', '');
-        $content = $request->input('content', '');
+        $seoTitle = $request->seo_title ?? '';
+        $content = $request->content ?? '';
         $slug = $request->input('slug', '');
-        $short_description = $request->input('short_description', '');
+        $seoDescription = $request->seo_description ?? '';
         $keywords = $request->input('keywords', []);
         $focusKeyword = is_array($keywords) ? ($keywords[0] ?? '') : $keywords;
 
 
-        $analyzer = app(\App\RankmathSEOForLaravel\Services\SeoAnalyzer::class);
+        $analyzer = app(SeoAnalyzer::class);
+        // dd($title, $content, $focusKeyword, $seo_description, $slug);
 
-        $analysisResult = $analyzer->analyze($title, $content, $focusKeyword, $short_description, $slug);
-
+        $analysisResult = $analyzer->analyze($seoTitle, $content, $focusKeyword, $seoDescription, $slug);
         $analysis = collect($analysisResult->checks)->map(function ($item) {
             $status = $item['status'] ?? ($item['passed'] ? 'success' : 'warning');
             return array_merge($item, ['status' => $status]);
@@ -404,13 +399,34 @@ class BlogController extends Controller
         $seoScoreValue = $this->calculateSeoScore($analysis, $suggestions);
         $hasWarning = $seoScoreValue < 80 || collect($analysis)->contains(fn($item) => $item['passed'] === false);
 
-        return response()->json([
-            'seoScoreValue' => $seoScoreValue,
-            'suggestions' => $suggestions,
+        $seoData = [
             'analysis' => $analysis,
+            'suggestions' => $suggestions,
+            'seoScoreValue' => $seoScoreValue,
             'hasWarning' => $hasWarning,
+        ];
+
+        $seoScoreValue = $seoData['seoScoreValue'] ?? 0;
+        $seoColor = 'bg-danger'; // đỏ mặc định (dưới 50)
+        $badgeClass = 'bg-danger';
+
+        if ($seoScoreValue >= 80) {
+            $seoColor = 'bg-success'; // xanh lá (tốt)
+            $badgeClass = 'bg-success';
+        } elseif ($seoScoreValue >= 50) {
+            $seoColor = 'bg-warning'; // vàng (trung bình)
+            $badgeClass = 'bg-warning text-dark';
+        }
+
+        // dd(vars: $seoData);
+
+        $view = view('backend.blogs.seo', compact('seoData'))->render();
+        return response()->json([
+            'success' => true,
+            'html' => $view,
+            'seoScoreVal' => $seoScoreValue,
+            'seoColor' => $seoColor,
+            'badgeClass' => $badgeClass
         ]);
     }
-
-
 }

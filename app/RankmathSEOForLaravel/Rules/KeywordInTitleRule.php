@@ -5,9 +5,9 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class KeywordInTitleRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription): array
     {
-        $passed = stripos($title, $focusKeyword) !== false;
+        $passed = stripos($seoTitle, $focusKeyword) !== false;
 
         return [
             'rule' => 'focus_keyword_in_title',

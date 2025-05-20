@@ -4,9 +4,9 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class KeywordInDescriptionRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription): array
     {
-        $description = trim(strip_tags($shortDescription ?? ''));
+        $description = trim(strip_tags($seoDescription ?? ''));
 
         if (empty($focusKeyword)) {
             return [

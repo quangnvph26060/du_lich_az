@@ -287,12 +287,12 @@
                                     </div>
                                 </div> --}}
 
-                                {!! NoCaptcha::renderJs() !!}
+                                {{-- {!! NoCaptcha::renderJs() !!}
                                 {!! NoCaptcha::display() !!}
 
                                 @error('g-recaptcha-response')
                                     <small class="text-danger">{{ $message }}</small>
-                                @enderror
+                                @enderror --}}
 
                                 <div class="btn">
                                     <button type="submit" name="button"

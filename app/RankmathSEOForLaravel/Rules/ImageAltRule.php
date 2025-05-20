@@ -4,7 +4,7 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class ImageAltRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription): array
     {
         // Kiểm tra tất cả hình ảnh có alt text
         preg_match_all('/<img[^>]+>/', $content, $images);

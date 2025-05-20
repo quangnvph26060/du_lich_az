@@ -21,10 +21,11 @@ class SeoAnalyzer
     protected array $rules = [];
     protected array $ruleGroups = [
         'basic' => [
-            'keyword_in_title',
-            'keyword_in_description',
+            'focus_keyword_in_title',
             'keyword_density',
             'keyword_in_slug',
+            'keyword_position',
+            'keyword_in_short_description',
         ],
         'content' => [
             'internal_link',
@@ -54,7 +55,7 @@ class SeoAnalyzer
         ];
     }
 
-    public function analyze(string $title, string $content, string $focusKeyword, string $shortDescription, string $slug): SeoAnalysisResult
+    public function analyze(string $seoTitle = '', string $content ='', string $focusKeyword = '', string $seoDescription = '', string $slug= ''): SeoAnalysisResult
     {
         $checks = [];
         $suggestions = [];
@@ -68,7 +69,7 @@ class SeoAnalyzer
         ];
 
         foreach ($validRules as $rule) {
-            $result = $rule->check($title, $content, $focusKeyword, $shortDescription);
+            $result = $rule->check($seoTitle, $content, $focusKeyword, $seoDescription);
             $checks[] = $result;
 
             foreach ($this->ruleGroups as $group => $ruleNames) {
@@ -89,9 +90,8 @@ class SeoAnalyzer
         $totalScore = array_sum(array_column($groupScores, 'score'));
         $maxScore = array_sum(array_column($groupScores, 'max_score'));
 
-        // Kiểm tra phần suggestions như cũ
         foreach ($suggestionRules as $suggestionRule) {
-            $result = $suggestionRule->check($title, $content, $focusKeyword, $shortDescription, $slug);
+            $result = $suggestionRule->check($seoTitle, $content, $focusKeyword, $seoDescription, $slug);
             $suggestions[] = $result;
         }
 

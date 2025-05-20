@@ -436,6 +436,58 @@
             reader.readAsDataURL(file);
         }
     }
+
+    function autoGenerateSlug(fromSelector, toSelector) {
+        $(fromSelector).on("input", function() {
+            const text = $(this).val();
+            const slug = text
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d")
+                .replace(/Đ/g, "d")
+                .replace(/[^a-z0-9 -]/g, "")
+                .replace(/\s+/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^-|-$/g, "")
+                .trim();
+
+            $(toSelector).val(slug).trigger("input"); // ✅ cập nhật rồi trigger input để char count update
+        });
+    }
+
+    function updateCharCount(inputSelector, maxLength) {
+        // Tìm label có 'for' tương ứng với inputSelector
+        const labelSelector = $('label[for="' + inputSelector.substring(1) + '"]');
+
+        // Tạo thẻ charCountSelector và thêm vào sau label
+        const charCountSelector = $("<small></small>")
+            .addClass("char-count")
+            .css({
+                position: "absolute",
+                right: "1.2rem",
+                top: "1rem",
+            })
+            .insertAfter(labelSelector);
+
+        // Đặt maxlength ban đầu cho phần tử input/textarea
+        $(inputSelector).attr("maxlength", maxLength);
+
+        // Hàm cập nhật số ký tự
+        $(inputSelector).on("input", function() {
+            var currentLength = $(this).val().length;
+            charCountSelector.text(currentLength + "/" + maxLength);
+
+            // Kiểm tra khi đã đạt maxLength, ngừng nhập
+            if (currentLength >= maxLength) {
+                $(this).attr("maxlength", maxLength); // Ngừng cho phép nhập thêm ký tự
+            }
+        });
+
+        // Cập nhật số ký tự ban đầu khi trang tải
+        var initialLength = $(inputSelector).val().length;
+        charCountSelector.text(initialLength + "/" + maxLength);
+    }
 </script>
 @include('backend/includes/alert')
 

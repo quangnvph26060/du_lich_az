@@ -6,7 +6,7 @@ use App\RankmathSEOForLaravel\Suggestions\SuggestionInterface;
 
 class HeadingStructureSuggestion implements SuggestionInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription, string $slug): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription, string $slug): array
     {
         $h1Count = preg_match_all('/<h1[^>]*>/i', $content, $matches);
 

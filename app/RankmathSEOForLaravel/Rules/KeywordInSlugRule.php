@@ -4,7 +4,7 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class KeywordInSlugRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $slug): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $slug): array
     {
         // Chuẩn hóa slug và từ khóa
         $normalizedSlug = $this->normalize($slug);

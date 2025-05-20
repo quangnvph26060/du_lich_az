@@ -4,7 +4,7 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class KeywordPositionRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription): array
     {
         $content = strip_tags($content);
         $content = trim($content);

@@ -35,7 +35,6 @@
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
-
                             <div class="form-group mb-3">
                                 <label for="slug">Slug</label>
                                 <input type="text" id="slug" name="slug"
@@ -48,12 +47,11 @@
                                 @enderror
                             </div>
 
-                            <div class="form-group mb-3">
+                            <div class="form-group mb-3 position-relative">
                                 <label for="short_description">Mô tả ngắn</label>
-                                <input type="text" id="short_description" name="short_description"
-                                    class="form-control @error('short_description') is-invalid @enderror"
-                                    placeholder="Enter post short description"
-                                    value="{{ old('short_description', $blog->short_description ?? '') }}">
+                                <textarea id="short_description" name="short_description"
+                                    class="form-control @error('short_description') is-invalid @enderror" placeholder="Enter post short description"
+                                    rows="3">{{ old('short_description', $blog->short_description ?? '') }}</textarea>
                                 @error('short_description')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -62,7 +60,7 @@
                             <div class="form-group mb-3">
                                 <label for="content">Nội dung</label>
                                 <textarea id="content" name="content" class="form-control ckeditor @error('content') is-invalid @enderror"
-                                    rows="8" placeholder="Enter content">{{ old('content', $blog->content ?? '') }}</textarea>
+                                    rows="8" placeholder="Enter content">{!! old('content', $blog->content ?? '') !!}</textarea>
                                 @error('content')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -80,13 +78,52 @@
                                     style="background:#fff;border:1px solid #e0e0e0;padding:16px 20px;border-radius:8px;max-width:700px;">
                                     <div id="gsp-title"
                                         style="color:#1a0dab;font-size:20px;line-height:1.2;font-weight:400;margin-bottom:2px;">
-                                        {{ old('title', $blog->title ?? 'Tiêu đề bài viết') }}</div>
+                                        {{ old('seo_title', $blog->seo_title ?? 'Tiêu đề bài viết') }}</div>
                                     <div id="gsp-url"
                                         style="color:#006621;font-size:14px;line-height:1.3;margin-bottom:2px;">
                                         {{ url('/blog') }}/<span
                                             id="gsp-slug">{{ old('slug', $blog->slug ?? 'slug-bai-viet') }}</span></div>
                                     <div id="gsp-desc" style="color:#545454;font-size:13px;line-height:1.4;">
-                                        {{ old('short_description', $blog->short_description ?? 'Mô tả ngắn của bài viết sẽ hiển thị ở đây.') }}
+                                        {{ old('seo_description', $blog->seo_description ?? 'Mô tả ngắn của bài viết sẽ hiển thị ở đây.') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Thêm vào phần đầu form, sau phần nội dung chính -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <ul class="nav nav-tabs" id="seoTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="basic-tab" data-bs-toggle="tab"
+                                        data-bs-target="#basic" type="button" role="tab">
+                                        <i class="fas fa-info-circle"></i> SEO Cơ bản
+                                    </button>
+                                </li>
+                            </ul>
+                            <div class="tab-content mt-3" id="seoTabsContent">
+                                <!-- Tab SEO Cơ bản -->
+                                <div class="tab-pane fade show active" id="basic" role="tabpanel">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <!-- SEO Title -->
+                                            <div class="form-group mb-3 position-relative">
+                                                <label for="seo_title" class="form-label">
+                                                    SEO tiêu đề </label>
+                                                <input type="text" class="form-control" id="seo_title" name="seo_title"
+                                                    value="{{ old('seo_title', $blog->seo_title ?? '') }}"
+                                                    placeholder="Nhập tiêu đề SEO">
+                                            </div>
+
+                                            <!-- SEO Description -->
+                                            <div class="form-group mb-3 position-relative">
+                                                <label for="seo_description" class="form-label">
+                                                    SEO nội dung
+                                                </label>
+                                                <textarea class="form-control" id="seo_description" name="seo_description" rows="3" placeholder="Nhập mô tả SEO">{{ old('seo_description', $blog->seo_description ?? '') }}</textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -129,156 +166,12 @@
                         </div>
                     </div>
 
+                    {{-- List SEO --}}
+                    <div class="" id="result">
+                        @include('backend.blogs.seo', ['seoData' => $seoData])
 
-                    <!-- SEO Card -->
-                    <div class="card mb-3" id="seo-card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">Tối ưu hóa tìm kiếm</h5>
-                                <a href="#" id="edit-seo-btn">Edit SEO meta</a>
-                            </div>
-                            <div id="seo-desc">
-                                <span>Setup meta title & description to make your site easy to discovered on search
-                                    engines such as
-                                    Google</span>
-                            </div>
-                            <div id="seo-form" style="display:none;">
-                                <hr>
-                                <!-- Phần hiển thị điểm SEO -->
-                                <div class="mb-3">
-                                    <h5 class="mb-0">SEO cơ bản
-                                        @php
-                                            $score = $seoScoreValue ?? 0;
-                                        @endphp
-                                        <span
-                                            class="badge 
-                                            {{ $score >= 80 ? 'bg-success' : ($score >= 70 ? 'bg-warning text-dark' : 'bg-danger') }} ms-2">
-                                            {{ $score >= 80 ? 'Tất cả điều tốt' : ($score >= 70 ? 'Cần cải thiện nhẹ' : 'Cần tối ưu') }}
-                                        </span>
-                                    </h5>
-
-                                    <ul class="list-unstyled mb-0 mt-2" id="seoAnalysis">
-                                        @if (isset($seoData['analysis']) && count($seoData['analysis']))
-                                            @foreach ($seoData['analysis'] as $item)
-                                                <li class="d-flex align-items-center mb-2">
-                                                    @php
-                                                        switch ($item['status']) {
-                                                            case 'success':
-                                                                $icon = 'fa-check-circle';
-                                                                $colorClass = 'text-success'; // xanh lá
-                                                                break;
-                                                            case 'warning':
-                                                                $icon = 'fa-exclamation-circle';
-                                                                $colorClass = 'text-warning'; // vàng
-                                                                break;
-                                                            case 'danger':
-                                                                $icon = 'fa-times-circle';
-                                                                $colorClass = 'text-danger'; // đỏ
-                                                                break;
-                                                            default:
-                                                                $icon = 'fa-info-circle';
-                                                                $colorClass = 'text-muted'; // xám
-                                                        }
-                                                    @endphp
-                                                    <i class="fa {{ $icon }} {{ $colorClass }} me-2 fs-5"></i>
-                                                    <span class="text-dark">{{ $item['message'] }}</span>
-                                                </li>
-                                            @endforeach
-                                        @endif
-                                    </ul>
-
-                                </div>
-
-                                <div class="alert alert-info mb-3" style="font-size: 0.95rem;">
-                                    <i class="fa fa-info-circle"></i> Meta keywords was removed by Google, you don't
-                                    need to add
-                                    meta keywords to your website. Learn more: <a href="https://yoast.com/meta-keywords"
-                                        target="_blank">https://yoast.com/meta-keywords</a>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
-                    {{-- Hiển thị lỗi --}}
-                    <div class="card mb-3" id="seo-card-error">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5 class="mb-0">Cẩn cải thiện</h5>
-
-                                <a href="#" id="edit-seo-btn-error">Edit SEO meta</a>
-                            </div>
-                            <div id="seo-desc-error"></div>
-                            <div id="seo-form-error" style="display:none;">
-                                <hr>
-                                <!-- Phần hiển thị lỗi SEO -->
-                                <div class="mb-3">
-                                    <h5 class="mb-0">Bổ sung</h5>
-                                    <ul class="list-unstyled mb-0 mt-2">
-                                        @if (isset($seoData['suggestions']) && count($seoData['suggestions']))
-                                            @foreach ($seoData['suggestions'] as $item)
-                                                <li class="d-flex align-items-center mb-2">
-                                                    @if ($item['status'] === 'success')
-                                                        <i class="fa fa-check-circle text-success me-2"></i>
-                                                    @elseif($item['status'] === 'warning')
-                                                        <i class="fa fa-exclamation-circle text-warning me-2"></i>
-                                                    @else
-                                                        <i class="fa fa-info-circle text-muted me-2"></i>
-                                                    @endif
-                                                    <span>{{ $item['message'] }}</span>
-                                                </li>
-                                            @endforeach
-                                        @endif
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Thêm vào phần đầu form, sau phần nội dung chính -->
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <ul class="nav nav-tabs" id="seoTabs" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="basic-tab" data-bs-toggle="tab"
-                                        data-bs-target="#basic" type="button" role="tab">
-                                        <i class="fas fa-info-circle"></i> SEO Cơ bản
-                                    </button>
-                                </li>
-                            </ul>
-                            <div class="tab-content mt-3" id="seoTabsContent">
-                                <!-- Tab SEO Cơ bản -->
-                                <div class="tab-pane fade show active" id="basic" role="tabpanel">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <!-- SEO Title -->
-                                            <div class="form-group mb-3">
-                                                <label for="seo_title" class="form-label">
-                                                    SEO tiêu đề
-                                                    <span class="text-muted" id="seo_title_counter">0/60</span>
-                                                </label>
-                                                <input type="text" class="form-control" id="seo_title"
-                                                    name="seo_title"
-                                                    value="{{ old('seo_title', $blog->seo_title ?? '') }}"
-                                                    placeholder="Nhập tiêu đề SEO">
-                                                <small class="text-muted">Tối ưu: 50-60 ký tự</small>
-                                            </div>
-
-                                            <!-- SEO Description -->
-                                            <div class="form-group mb-3">
-                                                <label for="seo_description" class="form-label">
-                                                    SEO nội dung
-                                                    <span class="text-muted" id="seo_description_counter">0/160</span>
-                                                </label>
-                                                <textarea class="form-control" id="seo_description" name="seo_description" rows="3"
-                                                    placeholder="Nhập mô tả SEO">{{ old('seo_description', $blog->seo_description ?? '') }}</textarea>
-                                                <small class="text-muted">Tối ưu: 120-160 ký tự</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Cột phải: Các khối chức năng -->
@@ -581,30 +474,24 @@
                 keywordify.addTags(keywords);
             }
 
-            // Các xử lý khác
-            $('#title').on('keyup', function() {
-                var title = $(this).val();
-                var slug = title.toLowerCase()
-                    .replace(/[^a-z0-9-]/g, '-')
-                    .replace(/-+/g, '-')
-                    .replace(/^-|-$/g, '');
-                $('#slug').val(slug);
-                $('#slug-preview').text(slug);
-            });
-
-            $('#edit-seo-btn').on('click', function(e) {
+            $(document).on('click', '#edit-seo-btn', function(e) {
                 e.preventDefault();
-                $('#seo-form').slideToggle(200);
-                $('#seo-desc').slideToggle(200);
+                // $('#seo-form').slideToggle(200);
+                // $('#seo-desc').slideToggle(200);
             });
 
             // Google Snippet Preview
             function updateSnippetPreview() {
-                $('#gsp-title').text($('#title').val() || 'Tiêu đề bài viết');
-                $('#gsp-slug').text($('#slug').val() || 'slug-bai-viet');
-                $('#gsp-desc').text($('#short_description').val() || 'Mô tả ngắn của bài viết sẽ hiển thị ở đây.');
+                let seoTitle = $('#seo_title').val() || 'Tiêu đề bài viết';
+                let slug = $('#slug').val() || 'slug-bai-viet';
+                let seoDescription = $('#seo_description').val() || 'Mô tả ngắn của bài viết sẽ hiển thị ở đây.';
+
+                $('#gsp-title').text(seoTitle);
+                $('#gsp-slug').text(slug);
+                $('#gsp-desc').text(seoDescription);
+
             }
-            $('#title, #slug, #short_description').on('input', updateSnippetPreview);
+            $('#seo_title, #slug, #seo_description').on('input', updateSnippetPreview);
             updateSnippetPreview();
 
         });
@@ -642,30 +529,10 @@
 
     <!-- Script đếm ký tự và cập nhật preview -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Đếm ký tự SEO Title
-            const seoTitle = document.getElementById('seo_title');
-            const seoTitleCounter = document.getElementById('seo_title_counter');
-            if (seoTitle) {
-                seoTitle.addEventListener('input', function() {
-                    seoTitleCounter.textContent = `${seoTitle.value.length}/60`;
-                    document.getElementById('preview_title').textContent = seoTitle.value || 'Tiêu đề SEO';
-                });
-                seoTitleCounter.textContent = `${seoTitle.value.length}/60`;
-            }
-
-            // Đếm ký tự SEO Description
-            const seoDescription = document.getElementById('seo_description');
-            const seoDescriptionCounter = document.getElementById('seo_description_counter');
-            if (seoDescription) {
-                seoDescription.addEventListener('input', function() {
-                    seoDescriptionCounter.textContent = `${seoDescription.value.length}/160`;
-                    document.getElementById('preview_description').textContent = seoDescription.value ||
-                        'Mô tả SEO';
-                });
-                seoDescriptionCounter.textContent = `${seoDescription.value.length}/160`;
-            }
-        });
+        updateCharCount('#seo_title', 60);
+        updateCharCount('#seo_description', 160);
+    
+        autoGenerateSlug('#title', '#slug')
     </script>
 
     {{-- Xử lí khi thêm mới bài viết --}}
@@ -673,8 +540,7 @@
         $(document).ready(function() {
             let seoTimeout;
 
-            // Gắn sự kiện input cho các trường input/textarea bình thường
-            $('#title, #keywords, #short_description, #slug').on('input', function() {
+            $('#seo_title, #keywords, #seo_description, #slug').on('input', function() {
                 clearTimeout(seoTimeout);
                 seoTimeout = setTimeout(runSeoAnalysis, 500);
             });
@@ -686,12 +552,32 @@
             });
 
             function runSeoAnalysis() {
+                const content = CKEDITOR.instances['content'].getData();
+
+                const rawKeywords = $('#keywords').val();
+                let keywords = [];
+                try {
+                    const parsed = JSON.parse(rawKeywords);
+                    if (Array.isArray(parsed)) {
+                        keywords = parsed.map(k => k.value?.trim()).filter(Boolean);
+                    }
+                } catch (e) {
+                    keywords = rawKeywords.split(',').map(k => k.trim());
+                }
+
+                const seo_title = $('#seo_title').val();
+                const hasKeyword = keywords.some(keyword => seo_title.toLowerCase().includes(keyword
+                    .toLowerCase()));
+                const seo_description = $('#seo_description').val();
+                const slug = $('#slug').val();
+
                 const data = {
-                    title: $('#title').val(),
-                    content: CKEDITOR.instances['content'].getData(),
-                    keywords: $('#keywords').val().split(',').map(k => k.trim()),
-                    short_description: $('#short_description').val(),
-                    slug: $('#slug').val(),
+                    content,
+                    keywords,
+                    seo_title,
+                    hasKeyword,
+                    seo_description,
+                    slug,
                     _token: '{{ csrf_token() }}'
                 };
 
@@ -700,48 +586,29 @@
                 $.ajax({
                     url: "{{ route('admin.blogs.seo.analysis.live') }}",
                     method: "POST",
-                    data: data,
+                    data: JSON.stringify(data),
+                    contentType: "application/json",
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
                     success: function(response) {
-                        $('#seoScoreValue').text(response.seoScoreValue);
+                        if (response.success) {
 
-                        let analysis = response.analysis || [];
-
-                        let listHtml = analysis.map(item => {
-                            let icon = 'fa-info-circle';
-                            let colorClass = 'text-muted';
-
-                            switch (item.status) {
-                                case 'success':
-                                    icon = 'fa-check-circle';
-                                    colorClass = 'text-success';
-                                    break;
-                                case 'warning':
-                                    icon = 'fa-exclamation-circle';
-                                    colorClass = 'text-warning';
-                                    break;
-                                case 'danger':
-                                    icon = 'fa-times-circle';
-                                    colorClass = 'text-danger';
-                                    break;
-                            }
-
-                            return `
-                            <li class="d-flex align-items-center mb-2">
-                                <i class="fa ${icon} ${colorClass} me-2 fs-5"></i>
-                                <span class="text-dark">${item.message}</span>
-                            </li>`;
-                        }).join('');
-
-                        $('#seoAnalysis').html(listHtml);
+                            $('#seo-score-badge').removeClass().addClass(
+                                `badge ${response.badgeClass} fs-6`).text(response.seoScoreVal + '/100');
+                            $('#seo-score-progress').removeClass().addClass(`progress-bar ${response.seoColor}`).css('width', response.seoScoreVal + '%')
+                            // console.log(response.seoScoreVal);
+                            
+                            $('#result').html(response.html);
+                        }
                         console.log('Phản hồi SEO:', response);
-
                     },
                     error: function(xhr) {
                         console.error('Lỗi SEO:', xhr);
                     }
-
                 });
             }
+
         });
     </script>
 @endpush

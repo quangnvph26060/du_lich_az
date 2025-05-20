@@ -4,7 +4,7 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class ContentLengthRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription): array
     {
         // Loại bỏ thẻ HTML để đếm số từ
         $textOnly = strip_tags($content);

@@ -4,7 +4,7 @@ namespace App\RankmathSEOForLaravel\Rules;
 
 class InternalLinkRule implements RuleInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription): array
     {
         $decodedContent = html_entity_decode($content);
 

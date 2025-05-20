@@ -5,7 +5,7 @@ use App\RankmathSEOForLaravel\Suggestions\SuggestionInterface;
 
 class KeywordDensitySuggestion implements SuggestionInterface
 {
-    public function check(string $title, string $content, string $focusKeyword, string $shortDescription, string $slug): array
+    public function check(string $seoTitle, string $content, string $focusKeyword, string $seoDescription, string $slug): array
     {
         $content = strip_tags($content);
         $content = trim($content);

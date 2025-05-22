@@ -16,7 +16,7 @@ class BlogController extends Controller
 {
     public function index(Request $request)
     {
-        $blogs = Blog::with('seoScore')->get();
+        $blogs = Blog::with(['seoScore','catalogue'])->get();
         return view('backend.blogs.index', compact('blogs'));
     }
 
@@ -39,7 +39,6 @@ class BlogController extends Controller
         );
 
     }
-
 
     public function edit(Request $request, $id)
     {
@@ -104,7 +103,6 @@ class BlogController extends Controller
         ]);
 
 
-
         if (!empty($request->tags)) {
             // Giải mã chuỗi JSON thành mảng
             $tagsArray = json_decode($request->tags, true);
@@ -157,8 +155,15 @@ class BlogController extends Controller
             $focusKeyword = $blog->keywords->first()->name ?? '';
             $analyzer = app(SeoAnalyzer::class);
 
+            dd(
+                $blog->seo_title,
+                $blog->content,
+                $focusKeyword,
+                $blog->seo_description ?? '',
+                $blog->slug
+            );
             $analysisResult = $analyzer->analyze(
-                $blog->title,
+                $blog->seo_title,
                 $blog->content,
                 $focusKeyword,
                 $blog->seo_description ?? '',
@@ -342,8 +347,9 @@ class BlogController extends Controller
         $focusKeyword = $blog->keywords->first()->name ?? '';
 
         $analyzer = app(SeoAnalyzer::class);
+        // dd($blog->seo_title, $blog->content, $focusKeyword, $blog->seo_description ?? '', $blog->slug);
 
-        $analysisResult = $analyzer->analyze($blog->seo_title, $blog->content, $focusKeyword, $blog->seo_description ?? '', $blog->slug);
+        $analysisResult = $analyzer->analyze($blog->seo_title = '', $blog->content, $focusKeyword, $blog->seo_description ?? '', $blog->slug);
 
         $analysis = collect($analysisResult->checks)->map(function ($item) {
             $status = $item['status'] ?? ($item['passed'] ? 'success' : 'warning');
@@ -376,14 +382,13 @@ class BlogController extends Controller
     {
         $seoTitle = $request->seo_title ?? '';
         $content = $request->content ?? '';
-        $slug = $request->input('slug', '');
+        $slug = $request->slug ?? '';
         $seoDescription = $request->seo_description ?? '';
         $keywords = $request->input('keywords', []);
         $focusKeyword = is_array($keywords) ? ($keywords[0] ?? '') : $keywords;
-
+        $short_description = $request->short_description ?? '';
 
         $analyzer = app(SeoAnalyzer::class);
-        // dd($title, $content, $focusKeyword, $seo_description, $slug);
 
         $analysisResult = $analyzer->analyze($seoTitle, $content, $focusKeyword, $seoDescription, $slug);
         $analysis = collect($analysisResult->checks)->map(function ($item) {

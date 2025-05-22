@@ -29,7 +29,7 @@ class ImageAltRule implements RuleInterface
                 ? 'Chưa có hình ảnh trong bài viết.'
                 : ($allImagesHaveAlt ? 'Tất cả hình ảnh đều có alt text.' : 'Có hình ảnh chưa có alt text.'),
             'score' => $passed ? 10 : 0,
-            'status' => !$hasImages ? 'warning' : ($allImagesHaveAlt ? 'success' : 'danger'),
+            'status' => !$hasImages ? 'danger' : ($allImagesHaveAlt ? 'success' : 'danger'),
             'suggestion' => !$hasImages
                 ? 'Thêm hình ảnh để cải thiện nội dung bài viết.'
                 : ($allImagesHaveAlt ? '' : 'Thêm alt text cho tất cả hình ảnh để cải thiện SEO.'),

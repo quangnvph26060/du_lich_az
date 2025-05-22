@@ -40,7 +40,7 @@ class KeywordInDescriptionRule implements RuleInterface
                 : 'Từ khóa chưa có trong mô tả ngắn.',
             'score' => $hasKeyword ? 10 : 0,
             'suggestion' => $hasKeyword ? '' : 'Thêm từ khóa vào mô tả ngắn để tăng tính liên quan.',
-            'status' => $hasKeyword ? 'success' : 'warning',
+            'status' => $hasKeyword ? 'success' : 'danger',
         ];
     }
 }

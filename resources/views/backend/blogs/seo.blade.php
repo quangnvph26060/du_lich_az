@@ -56,7 +56,6 @@
                          @endforeach
                      @endif
                  </ul>
-
              </div>
          </div>
      </div>
@@ -76,18 +75,31 @@
              <!-- Phần hiển thị lỗi SEO -->
              <div class="mb-3">
                  <h5 class="mb-0">Bổ sung</h5>
-                 <ul class="list-unstyled mb-0 mt-2">
+                 <ul class="list-unstyled mb-0 mt-2" id="seoSuggestions">
                      @if (isset($seoData['suggestions']) && count($seoData['suggestions']))
                          @foreach ($seoData['suggestions'] as $item)
                              <li class="d-flex align-items-center mb-2">
-                                 @if ($item['status'] === 'success')
-                                     <i class="fa fa-check-circle text-success me-2"></i>
-                                 @elseif($item['status'] === 'warning')
-                                     <i class="fa fa-exclamation-circle text-warning me-2"></i>
-                                 @else
-                                     <i class="fa fa-info-circle text-muted me-2"></i>
-                                 @endif
-                                 <span>{{ $item['message'] }}</span>
+                                 @php
+                                     switch ($item['status']) {
+                                         case 'success':
+                                             $icon = 'fa-check-circle';
+                                             $colorClass = 'text-success'; // xanh lá
+                                             break;
+                                         case 'warning':
+                                             $icon = 'fa-exclamation-circle';
+                                             $colorClass = 'text-warning'; // vàng
+                                             break;
+                                         case 'danger':
+                                             $icon = 'fa-times-circle';
+                                             $colorClass = 'text-danger'; // đỏ
+                                             break;
+                                         default:
+                                             $icon = 'fa-info-circle';
+                                             $colorClass = 'text-muted'; // xám
+                                     }
+                                 @endphp
+                                 <i class="fa {{ $icon }} {{ $colorClass }} me-2 fs-5"></i>
+                                 <span class="text-dark">{{ $item['message'] }}</span>
                              </li>
                          @endforeach
                      @endif

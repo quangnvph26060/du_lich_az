@@ -31,6 +31,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {{-- @dd($blogs) --}}
                         @foreach ($blogs as $blog)
                             <tr>
                                 <td class="text-center"><input type="checkbox" class="blog-checkbox" /></td>

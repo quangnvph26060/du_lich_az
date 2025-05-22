@@ -19,7 +19,7 @@ class HeadingStructureSuggestion implements SuggestionInterface
             'score' => $score,
             'message' => $passed ? 'Cấu trúc thẻ heading hợp lý (1 thẻ <h1>)' : "Tìm thấy {$h1Count} thẻ <h1> (nên có đúng 1 thẻ)",
             'suggestion' => $passed ? '' : 'Nên đảm bảo chỉ có duy nhất 1 thẻ <h1> trong nội dung.',
-            'status' => $passed ? 'success' : 'warning',
+            'status' => $passed ? 'success' : 'danger',
         ];
     }
 }

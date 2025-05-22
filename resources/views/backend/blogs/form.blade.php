@@ -531,7 +531,7 @@
     <script>
         updateCharCount('#seo_title', 60);
         updateCharCount('#seo_description', 160);
-    
+
         autoGenerateSlug('#title', '#slug')
     </script>
 
@@ -540,7 +540,7 @@
         $(document).ready(function() {
             let seoTimeout;
 
-            $('#seo_title, #keywords, #seo_description, #slug').on('input', function() {
+            $('#seo_title, #keywords, #seo_description, #slug, #short_description').on('input', function() {
                 clearTimeout(seoTimeout);
                 seoTimeout = setTimeout(runSeoAnalysis, 500);
             });
@@ -550,6 +550,11 @@
                 clearTimeout(seoTimeout);
                 seoTimeout = setTimeout(runSeoAnalysis, 500);
             });
+
+            @if (isset($blog))
+                
+                setTimeout(runSeoAnalysis, 500);
+            @endif
 
             function runSeoAnalysis() {
                 const content = CKEDITOR.instances['content'].getData();
@@ -570,6 +575,7 @@
                     .toLowerCase()));
                 const seo_description = $('#seo_description').val();
                 const slug = $('#slug').val();
+                const short_description = $('#short_description').val();
 
                 const data = {
                     content,
@@ -578,6 +584,7 @@
                     hasKeyword,
                     seo_description,
                     slug,
+                    short_description,
                     _token: '{{ csrf_token() }}'
                 };
 
@@ -595,10 +602,13 @@
                         if (response.success) {
 
                             $('#seo-score-badge').removeClass().addClass(
-                                `badge ${response.badgeClass} fs-6`).text(response.seoScoreVal + '/100');
-                            $('#seo-score-progress').removeClass().addClass(`progress-bar ${response.seoColor}`).css('width', response.seoScoreVal + '%')
+                                `badge ${response.badgeClass} fs-6`).text(response.seoScoreVal +
+                                '/100');
+                            $('#seo-score-progress').removeClass().addClass(
+                                `progress-bar ${response.seoColor}`).css('width', response
+                                .seoScoreVal + '%')
                             // console.log(response.seoScoreVal);
-                            
+
                             $('#result').html(response.html);
                         }
                         console.log('Phản hồi SEO:', response);

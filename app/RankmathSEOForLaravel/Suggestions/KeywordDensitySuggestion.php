@@ -20,7 +20,7 @@ class KeywordDensitySuggestion implements SuggestionInterface
                 'message' => 'Từ khóa hoặc nội dung không hợp lệ để tính mật độ từ khóa.',
                 'score' => 0,
                 'suggestion' => 'Vui lòng cung cấp từ khóa và nội dung hợp lệ.',
-                'status' => 'warning',
+                'status' => 'danger',
             ];
         }
 
@@ -43,7 +43,7 @@ class KeywordDensitySuggestion implements SuggestionInterface
             'suggestion' => !$isOptimal
                 ? ($density < 0.5 ? 'Tăng số lần xuất hiện từ khóa' : 'Giảm số lần xuất hiện từ khóa')
                 : '',
-            'status' => $isOptimal ? 'success' : 'warning',
+            'status' => $isOptimal ? 'success' : 'danger',
         ];
     }
 }

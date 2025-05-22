@@ -10,14 +10,14 @@ class KeywordInSlugRule implements RuleInterface
         $normalizedSlug = $this->normalize($slug);
         $normalizedKeyword = $this->normalize($focusKeyword);
 
-        $hasKeywordInSlug = strpos($normalizedSlug, $normalizedKeyword) !== false;
+        $hasKeywordInSlug = !empty($normalizedSlug) && !empty($normalizedKeyword) && strpos($normalizedSlug, $normalizedKeyword) !== false;
 
         return [
             'rule' => 'keyword_in_slug',
             'passed' => $hasKeywordInSlug,
             'message' => $hasKeywordInSlug ? 'Từ khóa đã có trong đường dẫn (slug).' : 'Từ khóa chưa có trong đường dẫn (slug).',
             'score' => $hasKeywordInSlug ? 10 : 0,
-            'status' => $hasKeywordInSlug ? 'success' : 'warning', 
+            'status' => $hasKeywordInSlug ? 'success' : 'danger',
             'suggestion' => $hasKeywordInSlug ? '' : 'Thêm từ khóa chính vào slug để cải thiện SEO.',
         ];
     }
@@ -27,7 +27,7 @@ class KeywordInSlugRule implements RuleInterface
     {
         $text = strtolower($text);
         $text = trim($text);
-        $text = preg_replace('/\s+/', '-', $text); 
+        $text = preg_replace('/\s+/', '-', $text);
         $text = $this->removeVietnameseAccents($text);
         return $text;
     }

@@ -31,28 +31,6 @@
                     </a>
                 </li>
 
-
-                <li class="nav-item {{ activeMenu('admin.catalogues.index') }}">
-                    <a href="{{ route('admin.catalogues.index') }}" class="collapsed">
-                        <i class="fas fa-chart-line"></i>
-                        <p>Danh mục bài viết</p>
-                    </a>
-                </li>
-
-                <li class="nav-item {{ activeMenu('admin.keywords.index') }}">
-                    <a href="{{ route('admin.keywords.index') }}" class="collapsed">
-                        <i class="fa-solid fa-key"></i>
-                        <p>Danh mục từ khóa</p>
-                    </a>
-                </li>
-
-                <li class="nav-item {{ activeMenu('admin.tags.index') }}">
-                    <a href="{{ route('admin.tags.index') }}" class="collapsed">
-                        <i class="fa-solid fa-tags"></i>
-                        <p>Danh mục tag</p>
-                    </a>
-                </li>
-
                 <li class="nav-item">
                     <a data-bs-toggle="collapse" class="has-children" href="#blogs">
                         <i class="fas fa-newspaper"></i>
@@ -61,6 +39,31 @@
                     </a>
                     <div class="collapse" id="blogs">
                         <ul class="nav nav-collapse">
+
+                            {{-- Danh mục --}}
+                            <li class="nav-item {{ activeMenu('admin.catalogues.index') }}">
+                                <a href="{{ route('admin.catalogues.index') }}" class="collapsed">
+                                    <i class="fa-solid fa-folder"></i>
+                                    <p>Danh mục bài viết</p>
+                                </a>
+                            </li>
+
+                            {{-- Từ khóa  --}}
+                            <li class="nav-item {{ activeMenu('admin.keywords.index') }}">
+                                <a href="{{ route('admin.keywords.index') }}" class="collapsed">
+                                    <i class="fa-solid fa-key"></i>
+                                    <p>Danh mục từ khóa</p>
+                                </a>
+                            </li>
+
+                            {{-- Tag --}}
+                            <li class="nav-item {{ activeMenu('admin.tags.index') }}">
+                                <a href="{{ route('admin.tags.index') }}" class="collapsed">
+                                    <i class="fa-solid fa-tags"></i>
+                                    <p>Danh mục tag</p>
+                                </a>
+                            </li>
+
                             <li class="nav-item {{ activeMenu('admin.blogs.index') }}">
                                 <a href="{{ route('admin.blogs.index') }}">
                                     <span class="sub-item">Danh sách bài viết</span>
